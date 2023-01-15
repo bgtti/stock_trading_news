@@ -29,9 +29,10 @@ def get_stock_info(API_KEY, symbol):
 
     data_stock = response.json()["Time Series (Daily)"]
     data_stock_as_list = [value for (key, value) in data_stock.items()]
+    data_stock_keys = [key for (key, value) in data_stock.items()]
     last_close = data_stock_as_list[0]["4. close"]
     last_open = data_stock_as_list[0]["1. open"]
-    last_open_date = data_stock_as_list[0]
+    last_open_date = data_stock_keys[0]
     last_7_open = data_stock_as_list[6]["1. open"]
     last_30_open = data_stock_as_list[29]["1. open"]
 
@@ -59,12 +60,3 @@ def get_stock_info(API_KEY, symbol):
     return this_company
 
 
-# Search endpoint: to build a searchbox to match ticker and symbol : 'https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=tesco&apikey=demo'
-
-
-# todays_weekday = todays_date.weekday()
-# last_market_opening_day = "Weekday: the stock market is operating during business hours."
-# if todays_weekday < 5:
-#     is_market_open = "Weekend: the stock market might be closed."
-
-# print(datetime.now()- timedelta(days=2))
