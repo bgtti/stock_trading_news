@@ -1,7 +1,9 @@
 import requests
+import json
+from datetime import date, datetime, timedelta
 
 class StockInformation:
-    def __init__(self, ticker, name, exchange, currency, EBITDA, dividend_per_share, revenue_per_share, pe_ratio, high_52_week, low_52_week, last_close, last_open, last_7_close, last_7_open, last_30_open, last_30_close) -> None:
+    def __init__(self, ticker, name, exchange, currency, EBITDA, dividend_per_share, revenue_per_share, pe_ratio, high_52_week, low_52_week, last_close, last_open, last_open_date, last_7_open, last_30_open) -> None:
         self.ticker = ticker
         self.name = name
         self.exchange = exchange
@@ -14,10 +16,9 @@ class StockInformation:
         self.low_52_week = low_52_week  # lowest price in the past 52 weeks
         self.last_close = last_close # price at last stock closing date
         self.last_open = last_open  # price at last stock opening date
-        self.last_7_close = last_7_close  # price at close 7 days ago
+        self.last_open_date = last_open_date # date from lastest price
         self.last_7_open = last_7_open  # price at open 7 days ago
         self.last_30_open = last_30_open  # price at open 30 days ago
-        self.last_30_close = last_30_close  # price at close 30 days ago
 
 
 def get_stock_info(API_KEY, symbol):
@@ -26,13 +27,44 @@ def get_stock_info(API_KEY, symbol):
         url=f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol={symbol}&apikey={API_KEY}")
     response.raise_for_status()
 
-    data = response.json()
+    data_stock = response.json()["Time Series (Daily)"]
+    data_stock_as_list = [value for (key, value) in data_stock.items()]
+    last_close = data_stock_as_list[0]["4. close"]
+    last_open = data_stock_as_list[0]["1. open"]
+    last_open_date = data_stock_as_list[0]
+    last_7_open = data_stock_as_list[6]["1. open"]
+    last_30_open = data_stock_as_list[29]["1. open"]
 
     # Company overview
-    response_overview = requests.get(
+    response_company = requests.get(
         url=f"https://www.alphavantage.co/query?function=OVERVIEW&symbol={symbol}&apikey={API_KEY}")
-    response_overview.raise_for_status()
+    response_company.raise_for_status()
 
-    data_overview = response_overview.json()
+    data_company = response_company.json()
+    data_company_as_dict = json.loads(json.dumps(data_company))
+    ticker = data_company_as_dict["Symbol"]
+    name = data_company_as_dict["Name"]
+    exchange = data_company_as_dict["Exchange"]
+    currency = data_company_as_dict["Currency"]
+    EBITDA = data_company_as_dict["EBITDA"]
+    dividend_per_share = data_company_as_dict["DividendPerShare"]
+    revenue_per_share = data_company_as_dict["RevenuePerShareTTM"]
+    pe_ratio = data_company_as_dict["PERatio"]
+    high_52_week = data_company_as_dict["52WeekHigh"]
+    low_52_week = data_company_as_dict["52WeekLow"]
+
+    this_company = StockInformation(ticker, name, exchange, currency, EBITDA, dividend_per_share, revenue_per_share,
+                                    pe_ratio, high_52_week, low_52_week, last_close, last_open, last_open_date, last_7_open, last_30_open)
+    
+    return this_company
+
 
 # Search endpoint: to build a searchbox to match ticker and symbol : 'https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=tesco&apikey=demo'
+
+
+# todays_weekday = todays_date.weekday()
+# last_market_opening_day = "Weekday: the stock market is operating during business hours."
+# if todays_weekday < 5:
+#     is_market_open = "Weekend: the stock market might be closed."
+
+# print(datetime.now()- timedelta(days=2))
